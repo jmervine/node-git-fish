@@ -34,4 +34,15 @@ app.post('/:endpoint', function (req, res) {
     }
     console.trace(new Error('Missing action.'));
     res.send(500);
-}).listen(config.port);
+});
+
+console.log('Starting on port: %s', config.port);
+
+Object.keys(config).forEach(function (key) {
+    if (key !== "token" && key !== "port") {
+        console.log(' -> /%s', key);
+    }
+});
+
+
+app.listen(config.port);
