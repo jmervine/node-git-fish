@@ -35,3 +35,9 @@ woot! command!
 you posted to /gofish
 $ pkill -9 -f node
 ```
+
+> Configuration node:
+>
+> If a given element has both `command` and `script`, `command` will always be executed over `script`. I'm considering supporting both, but don't really see the need for the use case at this time.
+>
+> Additionally, `script` can be anything; `ruby`, `bash`, `python`, etc. It doesn't have to be a `node` script.
