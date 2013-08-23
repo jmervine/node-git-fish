@@ -5,7 +5,7 @@ var app = express();
 
 var config;
 try {
-    config = require(path.resolve(__dirname, (process.argv[2] || './config.json')));
+    config = require(path.resolve(process.cwd(), (process.argv[2] || './config.json')));
 } catch (e) {
     console.error('RTFM yo! You need a config file!');
     console.trace(e);
@@ -26,7 +26,7 @@ app.post('/:endpoint', function (req, res) {
         return;
     }
     if (config[endpoint].script) {
-        require('child_process').spawn(path.resolve(__dirname,config[endpoint].script), [], {
+        require('child_process').spawn(path.resolve(process.cwd(),config[endpoint].script), [], {
             detached: true,
             stdio: 'inherit'
         });
