@@ -26,9 +26,12 @@ $ curl -X POST "http://localhost:8000/script?token=go-fish"
 OK
 $ curl -X POST "http://localhost:8000/command?token=go-fish"
 OK
+$ curl -X POST "http://localhost:8000/gofish?token=go-fish"
+OK
 $ cat log.log
 nohup: ignoring input
 woot! script!
 woot! command!
+you posted to /gofish
 $ pkill -9 -f node
 ```
