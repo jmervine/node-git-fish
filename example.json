@@ -6,6 +6,9 @@
     },
     "script": {
         "script": "example.script.js"
+    },
+    "gofish" : {
+        "command" : "console.log('you posted to /gofish')"
     }
 }
 
