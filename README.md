@@ -21,7 +21,8 @@ node ./index.js [PATH TO CONFIG]
 Testing the example:
 
 ```
-$ nohup node ./index.js example.json &> log.log &
+$ npm install github jmervine/node-git-fish
+$ nohup ./node_modules/.bin/git-fish ./node_modules/git-fish/example.json &> log.log &
 $ curl -X POST "http://localhost:8000/script?token=go-fish"
 OK
 $ curl -X POST "http://localhost:8000/command?token=go-fish"

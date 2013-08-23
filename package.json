@@ -2,7 +2,7 @@
   "name": "git-fish",
   "version": "0.0.1",
   "bin": {
-      "fish": "./index.js"
+      "git-fish": "./index.js"
   },
   "dependencies": {
     "express": "~3.3.5"
