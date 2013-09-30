@@ -14,6 +14,8 @@ try {
 
 config.port = config.port || 8000;
 
+app.use(express.bodyParser());
+
 app.get('/:endpoint', function (req, res) {
     console.log('Ack! Someone\'s trying to GET me!');
     res.send(403);
@@ -27,11 +29,31 @@ app.post('/:endpoint', function (req, res) {
         res.send(403);
         return;
     }
+
+    var ref;
+    try {
+        ref = JSON.parse(req.body.payload).ref;
+    } catch (e) {
+        console.log('Invalid request...');
+        console.trace(e);
+        res.send(500);
+        return;
+    }
+
+    if (config[endpoint].branch && !ref.match(config[endpoint].branch)) {
+        // Everything worked, but there's nothing to do here because
+        // we didn't see the right branch.
+        console.log('Skipping request: \n -> %s doesn\'t match %s', ref, config[endpoint].branch);
+        res.send(200);
+        return;
+    }
+
     if (config[endpoint].command) {
         eval(config[endpoint].command);
         res.send(200);
         return;
     }
+
     if (config[endpoint].script) {
         console.log(' Running: \n -> %s', config[endpoint].script);
         require('child_process').spawn(path.resolve(process.cwd(),config[endpoint].script), [], {

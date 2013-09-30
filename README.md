@@ -50,7 +50,8 @@ $ pkill -9 -f node
   "port": 8001,
   "token": "shhh_do_not_tell_anyone",
   "mysite": {
-    "script": "/home/me/update_mysite.sh"
+    "script": "/home/me/update_mysite.sh",
+    "branch": "develop" // optional branch matcher
   }
 }
 ```
