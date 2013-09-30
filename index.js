@@ -14,8 +14,15 @@ try {
 
 config.port = config.port || 8000;
 
+app.get('/:endpoint', function (req, res) {
+    console.log('Ack! Someone\'s trying to GET me!');
+    res.send(403);
+    return;
+});
+
 app.post('/:endpoint', function (req, res) {
     var endpoint = req.param('endpoint');
+	console.log('Processing request: /%s', endpoint);
     if (req.query.token !== config.token) {
         res.send(403);
         return;
@@ -26,6 +33,7 @@ app.post('/:endpoint', function (req, res) {
         return;
     }
     if (config[endpoint].script) {
+        console.log(' Running: \n -> %s', config[endpoint].script);
         require('child_process').spawn(path.resolve(process.cwd(),config[endpoint].script), [], {
             detached: true,
             stdio: 'inherit'
