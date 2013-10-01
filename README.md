@@ -1,4 +1,4 @@
-# Git Post Commit Hook in Node.js
+# Git Post Commit Hook Listener in Node.js
 
 > Why fish? What recieves a hook?
 
