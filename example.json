@@ -8,7 +8,8 @@
         "script": "example.script.js"
     },
     "gofish" : {
-        "command" : "console.log('you posted to /gofish')"
+        "command" : "console.log('you posted to /gofish')",
+        "branch"  : "master"
     }
 }
 
