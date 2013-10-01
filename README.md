@@ -5,36 +5,34 @@
 
 > Quick README, more to come!
 
-### Install
+### Usage
 
 ```
-npm install github jmervine/node-git-fish
-```
-
-### Use
-
-```
-node ./index.js [PATH TO CONFIG]
+git clone https://github.com/jmervine/node-git-fish.git
+cd node-git-fish
+cp example.json config.json
+node ./index.js [PATH TO CONFIG] # config.json is default
 ```
 
 
 Testing the example:
 
 ```
-$ npm install github jmervine/node-git-fish
-$ nohup ./node_modules/.bin/git-fish ./node_modules/git-fish/example.json &> log.log &
+$ git clone https://github.com/jmervine/node-git-fish.git
+$ cd node-git-fish
+$ nohup node ./index.js ./example.json &
 $ curl -X POST "http://localhost:8000/script?token=go-fish"
 OK
 $ curl -X POST "http://localhost:8000/command?token=go-fish"
 OK
 $ curl -X POST "http://localhost:8000/gofish?token=go-fish"
 OK
-$ cat log.log
+$ cat nohup.log
 nohup: ignoring input
 woot! script!
 woot! command!
 you posted to /gofish
-$ pkill -9 -f node
+$ pkill -9 -f "node ./index.js ./example.json"
 ```
 
 > Configuration note:
