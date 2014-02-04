@@ -65,7 +65,7 @@ function startArgs(args) {
         "--spinSleepTime", "2000",
         "--plain", "--append",
         "--sourceDir", path.resolve(__dirname),
-        "--pidFile", path.resolve(__dirname, '..', 'gitfish.pid'),
+        "--pidFile", '/tmp/gitfish.pid',
         "--outFile", log,
         "--errFile", log,
         "--logFile", log
