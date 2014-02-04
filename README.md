@@ -22,7 +22,7 @@ USAGE: gitfish ACTION [CONFIG_FILE]
 #### Usage Examples
 
 ```
-$ npm install -g https://github.com/jmervine/node-git-fish.git
+$ npm install -g github git://github.com/jmervine/node-git-fish.git
 
 $ gitfish config
 Listener port? [8000]
