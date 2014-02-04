@@ -60,7 +60,6 @@ if (action === 'config') {
 
 function startArgs(args) {
     return args.concat([
-        "--max", "1",
         "--minUptime", "2000",
         "--spinSleepTime", "2000",
         "--plain", "--append",
