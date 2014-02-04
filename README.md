@@ -28,7 +28,7 @@ $ gitfish config
 Listener port? [8000]
 Security token? [secret]
 Hook endpoint? [script] /foo
-Hook script? [PWD/script.js]
+Hook script? [CWD/script.js]
 Hook branch filter?
 Saved configuration to /home/jmervine/config.json
 
@@ -60,6 +60,10 @@ data:        uid  command       script     forever pid  logfile                 
 > `script` can be anything; `ruby`, `bash`, `python`, etc. It doesn't have to be a `node` script.
 
 ### Real World Config Example
+
+> Important Note:
+>
+> `script` path must absolute and the script must be executable.
 
 ``` json
 {
