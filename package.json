@@ -1,10 +1,35 @@
 {
   "name": "git-fish",
   "version": "0.0.1",
+  "description": "Wrapper for phantomjs yslow.js",
+  "main": "./index.js",
   "bin": {
-      "git-fish": "./index.js"
+    "git-fish": "./bin/gitfish"
   },
+  "scripts": {
+    "test": "./test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jmervine/node-git-fish.git"
+  },
+  "keywords": [
+    "git",
+    "github",
+    "post recieve hook",
+    "hook",
+    "autodeploy",
+    "deployment"
+  ],
+  "author": "Joshua Mervine <joshua@mervine.net> (http://mervine.net)",
+  "license": "MIT",
   "dependencies": {
-    "express": "~3.3.5"
+    "forever": "~0.10.11",
+    "which": "~1.0.5",
+    "winston": "~0.7.2"
+  },
+  "devDependencies": {
+    "request": "~2.33.0",
+    "tape": "~2.4.2"
   }
 }

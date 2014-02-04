@@ -1,15 +1,11 @@
 {
     "port": 8000,
     "token": "go-fish",
-    "command": {
-        "command" : "console.log('woot! command!')"
-    },
     "script": {
         "script": "example.script.js"
     },
     "gofish" : {
-        "command" : "console.log('you posted to /gofish')",
+        "script": "./test/script.js",
         "branch"  : "master"
     }
 }
-

@@ -1,0 +1,104 @@
+#!/usr/bin/env node
+var fs      = require('fs');
+var which   = require('which').sync;
+var path    = require('path');
+var action  = process.argv[2];
+var confile = process.argv[3];
+
+// Ensure forever.
+var forever;
+try {
+    forever = which('forever');
+} catch (e) {
+    forever = path.resolve(__dirname, '..', 'node_modules', '.bin', 'forever');
+}
+if (!fs.existsSync(forever)) {
+    usage(new Error('Forever not found.'));
+}
+
+// Default config file, if not specified.
+if (typeof confile === 'undefined') {
+    confile = path.resolve(process.cwd(), 'config.json');
+}
+
+// Config file must exist.
+if (!fs.existsSync(confile)) {
+    usage(new Error('Config file ('+confile+') wasn\'t found.'));
+}
+
+var script = 'gitfish.js';
+var args = [process.argv[0], forever, action];
+var config = require(confile);
+var log = config.log || path.resolve(__dirname, '..', 'gitfish.log');
+switch(action) {
+    case 'run':
+        require('../')({ config: confile || 'config.json' });
+        break;
+    case 'start':
+    case 'restart':
+        args = startArgs(args);
+        args.push(script);
+        execForever(args);
+        break;
+    case 'stop':
+    case 'logs':
+        args.push(script);
+        execForever(args);
+        break;
+    case 'list':
+        execForever(args);
+        break;
+    default:
+        usage();
+}
+
+function startArgs(args) {
+    return args.concat([
+        "--max", "1",
+        "--minUptime", "2000",
+        "--spinSleepTime", "2000",
+        "--plain", "--append",
+        "--sourceDir", path.resolve(__dirname),
+        "--pidFile", path.resolve(__dirname, '..', 'gitfish.pid'),
+        "--outFile", log,
+        "--errFile", log,
+        "--logFile", log
+    ]);
+}
+
+function execForever(args) {
+    //console.dir(args);
+    //console.log(args.join(' '));
+    var childProcess = require('child_process');
+    childProcess.exec(args.join(' '), function (err, stdout, stderr) {
+        if (err) {
+            usage(err);
+        } else if (stderr) {
+            usage(new Error(stderr));
+        } else {
+            console.log(stdout);
+            process.exit(0);
+        }
+    });
+}
+
+// Print usage.
+function usage(err) {
+    if (err) {
+        console.log(err.message);
+        //console.log(' ');
+    }
+    console.log('USAGE: gitfish ACTION [CONFIG_FILE]');
+    console.log(' ');
+    console.log(' Default CONFIG_FILE is <cwd>/config.json');
+    console.log(' ');
+    console.log(' Actions:');
+    console.log(' - run     :: start gitfish in current session');
+    console.log(' - start   :: starts gitfish daemonized w/ forever');
+    console.log(' - restart :: restarts gitfish daemon');
+    console.log(' - stop    :: stops gitfish daemon');
+    console.log(' - list    :: gitfish daemon information');
+    console.log(' ');
+    process.exit(1);
+}
+

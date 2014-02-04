@@ -1,0 +1,12 @@
+{
+    "port": 11337,
+    "token": "go-fish",
+    "test1" : {
+        "script": "test/script.js"
+    },
+    "test2" : {
+        "script": "test/script.js",
+        "branch"  : "master"
+    }
+}
+

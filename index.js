@@ -1,79 +1,103 @@
 #!/usr/bin/env node
-var path = require('path');
-var express = require('express');
-var app = express();
+var http   = require('http');
+var path   = require('path');
+var logger = require('./lib/logger');
+var spawn  = require('child_process').spawn;
+var qs     = require('querystring');
 
-var config;
-try {
-    config = require(path.resolve(process.cwd(), (process.argv[2] || './config.json')));
-} catch (e) {
-    console.error('RTFM yo! You need a config file!');
-    console.trace(e);
-    process.exit(1);
-}
+module.exports = function(c) {
 
-config.port = config.port || 8000;
-
-app.use(express.bodyParser());
-
-app.get('/:endpoint', function (req, res) {
-    console.log('Ack! Someone\'s trying to GET me!');
-    res.send(403);
-    return;
-});
-
-app.post('/:endpoint', function (req, res) {
-    var endpoint = req.param('endpoint');
-	console.log('Processing request: /%s', endpoint);
-    if (req.query.token !== config.token) {
-        res.send(403);
-        return;
+    if (c.logger) {
+        logger = c.logger;
     }
 
-    var ref;
+    var config;
     try {
-        ref = JSON.parse(req.body.payload).ref;
+        config = require(path.resolve(process.cwd(), c.config));
     } catch (e) {
-        console.log('Invalid request...');
-        console.trace(e);
-        res.send(500);
-        return;
+        logger.error('RTFM yo! You need a config file!');
+        logger.error(e.stack);
+        process.exit(1);
     }
 
-    if (config[endpoint].branch && !ref.match(config[endpoint].branch)) {
-        // Everything worked, but there's nothing to do here because
-        // we didn't see the right branch.
-        console.log('Skipping request: \n -> %s doesn\'t match %s', ref, config[endpoint].branch);
-        res.send(200);
-        return;
-    }
+    config.port = c.port || config.port || 8000;
 
-    if (config[endpoint].command) {
-        eval(config[endpoint].command);
-        res.send(200);
-        return;
-    }
+    http.createServer(function (request, response) {
 
-    if (config[endpoint].script) {
-        console.log(' Running: \n -> %s', config[endpoint].script);
-        require('child_process').spawn(path.resolve(process.cwd(),config[endpoint].script), [], {
-            detached: true,
-            stdio: 'inherit'
+        var parts = request.url.split('?');
+
+        request.pathname = parts[0];
+        request.query    = qs.parse(parts[1]);
+
+        if (request.method !== 'POST' ||
+                request.query.token !== config.token) {
+            logger.warn('Forbidden request: %s', request.url);
+            response.writeHead(403, {'Content-Type': 'text/plain'});
+            response.end('Forbidden 403\n');
+            return;
+        }
+
+        var endpoint = request.pathname;
+        if (endpoint.indexOf('/') === 0) {
+            endpoint = endpoint.replace('/', '');
+        }
+
+        if (typeof config[endpoint] === 'undefined') {
+            logger.error(new Error('404: Missing action: ' + endpoint).stack);
+            response.writeHead(404, {'Content-Type': 'text/plain'});
+            response.end('File Not Found 404\n');
+            return;
+        }
+
+        var body = '';
+        request.on('data', function (data) {
+            body += data;
         });
-        res.send(200);
-        return;
-    }
-    console.trace(new Error('Missing action.'));
-    res.send(500);
-});
 
-console.log('Starting on port: %s', config.port);
+        request.on('end', function () {
+            body = JSON.parse(body);
 
-Object.keys(config).forEach(function (key) {
-    if (key !== "token" && key !== "port") {
-        console.log(' -> /%s', key);
-    }
-});
+            var ref;
+            try {
+                ref = body.payload.ref;
+            } catch (e) {
+                logger.error('Invalid post:');
+                logger.error(e.stack);
+                response.writeHead(500, {'Content-Type': 'text/plain'});
+                response.end('Application Error 500\n');
+                return;
+            }
 
+            if (config[endpoint].branch &&
+                    !ref.match(config[endpoint].branch)) {
+                logger.warn('Skipping request:\n -> %s doesn\'t match %s',
+                                ref, config[endpoint].branch);
+                response.writeHead(200, {'Content-Type': 'text/plain'});
+                response.end();
+                return;
+            }
 
-app.listen(config.port);
+            if (config[endpoint].script) {
+                logger.info(' Running:\n -> %s', config[endpoint].script);
+                spawn(path.resolve(process.cwd(), config[endpoint].script), [], {
+                    detached: true,
+                    stdio: 'inherit'
+                });
+                response.writeHead(200, {'Content-Type': 'text/plain'});
+                response.end();
+                return;
+            }
+        });
+
+    }).listen(config.port);
+
+    logger.info('Server running on port ', config.port);
+
+    Object.keys(config).forEach(function (key) {
+        if (key !== "token" && key !== "port") {
+            logger.info(' -> /%s', key);
+        }
+    });
+
+};
+
