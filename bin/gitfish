@@ -5,55 +5,57 @@ var path    = require('path');
 var action  = process.argv[2];
 var confile = process.argv[3];
 
-// Ensure forever.
-var forever;
-try {
-    forever = which('forever');
-} catch (e) {
-    forever = path.resolve(__dirname, '..', 'node_modules', '.bin', 'forever');
-}
-if (!fs.existsSync(forever)) {
-    usage(new Error('Forever not found.'));
-}
+if (action === 'config') {
+    buildConfiguration();
+} else {
 
-// Default config file, if not specified.
-if (typeof confile === 'undefined') {
-    confile = path.resolve(process.cwd(), 'config.json');
-}
+    // Ensure forever.
+    var forever;
+    try {
+        forever = which('forever');
+    } catch (e) {
+        forever = path.resolve(__dirname, '..', 'node_modules', '.bin', 'forever');
+    }
+    if (!fs.existsSync(forever)) {
+        usage(new Error('Forever not found.'));
+    }
 
-// Config file must exist.
-if (!fs.existsSync(confile)) {
-    usage(new Error('Config file ('+confile+') wasn\'t found.'));
-}
+    // Default config file, if not specified.
+    if (typeof confile === 'undefined') {
+        confile = path.resolve(process.cwd(), 'config.json');
+    }
 
-var script = 'gitfish.js';
-var args = [process.argv[0], forever, action];
-var config = require(confile);
-var log = config.log || path.resolve(__dirname, '..', 'gitfish.log');
-switch(action) {
-    case 'config':
-    case 'configure':
-        buildConfiguration();
-        break;
-    case 'run':
-        require('../')({ config: confile || 'config.json' });
-        break;
-    case 'start':
-    case 'restart':
-        args = startArgs(args);
-        args.push(script);
-        execForever(args);
-        break;
-    case 'stop':
-    case 'logs':
-        args.push(script);
-        execForever(args);
-        break;
-    case 'list':
-        execForever(args);
-        break;
-    default:
-        usage();
+    // Config file must exist.
+    if (!fs.existsSync(confile)) {
+        usage(new Error('Config file ('+confile+') wasn\'t found.'));
+    }
+
+    var script = 'gitfish.js';
+    var args = [process.argv[0], forever, action];
+    var config = require(confile);
+    var log = config.log || path.resolve(__dirname, '..', 'gitfish.log');
+    switch(action) {
+        case 'run':
+            require('../')({ config: confile || 'config.json' });
+            break;
+        case 'start':
+        case 'restart':
+            args = startArgs(args);
+            args.push(script);
+            execForever(args);
+            break;
+        case 'stop':
+        case 'logs':
+            args.push(script);
+            execForever(args);
+            break;
+        case 'list':
+            execForever(args);
+            break;
+        default:
+            usage();
+    }
+
 }
 
 function startArgs(args) {
