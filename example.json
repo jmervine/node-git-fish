@@ -1,6 +1,7 @@
 {
     "port": 8000,
     "token": "go-fish",
+    "log": "/tmp/gitfish.log",
     "script": {
         "script": "example.script.js"
     },

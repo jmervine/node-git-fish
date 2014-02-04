@@ -33,7 +33,7 @@ if (action === 'config') {
     var script = 'gitfish.js';
     var args = [process.argv[0], forever, action];
     var config = require(confile);
-    var log = config.log || path.resolve(__dirname, '..', 'gitfish.log');
+    var log = config.log || path.resolve(process.cwd(), 'gitfish.log');
     switch(action) {
         case 'run':
             require('../')({ config: confile || 'config.json' });
@@ -143,6 +143,12 @@ function buildConfiguration() {
         function token(callback) {
             read.question('Security token? [secret] ', function (answer) {
                 c.token = (answer || 'secret').trim();
+                callback();
+            });
+        },
+        function logs(callback) {
+            read.question('Log location? [/tmp/gitfish.log] ', function (answer) {
+                c.log = (answer || '/tmp/gitfish.log').trim();
                 callback();
             });
         },
