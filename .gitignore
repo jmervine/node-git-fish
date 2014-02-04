@@ -1,4 +1,5 @@
 /node_modules
 *.log
+*.pid
 /config.json
 /nohup.out
