@@ -55,7 +55,7 @@ module.exports = function(c) {
         });
 
         request.on('end', function () {
-            body = JSON.parse(body);
+            body = qs.parse(body);
 
             var ref;
             try {
