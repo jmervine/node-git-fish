@@ -30,7 +30,7 @@
     "async": "~0.2.10"
   },
   "devDependencies": {
-    "request": "~2.33.0",
+    "request-lite": "~2.33.1",
     "tape": "~2.4.2"
   }
 }

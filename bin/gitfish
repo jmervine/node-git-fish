@@ -2,78 +2,68 @@
 var fs      = require('fs');
 var which   = require('which').sync;
 var path    = require('path');
+
+var script  = 'gitfish.js';
 var action  = process.argv[2];
 var confile = process.argv[3];
 
-if (action === 'config') {
-    buildConfiguration();
-} else {
+var settings;
 
-    // Ensure forever.
-    var forever;
-    try {
-        forever = which('forever');
-    } catch (e) {
-        forever = path.resolve(__dirname, '..', 'node_modules', '.bin', 'forever');
-    }
-    if (!fs.existsSync(forever)) {
-        usage(new Error('Forever not found.'));
-    }
+switch(action) {
 
-    // Default config file, if not specified.
-    if (typeof confile === 'undefined') {
-        confile = path.resolve(process.cwd(), 'config.json');
-    }
+    // gitfish config
+    case 'config':
+        buildConfiguration();
+        break;
 
-    // Config file must exist.
-    if (!fs.existsSync(confile)) {
-        usage(new Error('Config file ('+confile+') wasn\'t found.'));
-    }
+    // gitfish run
+    case 'run':
+        require('../')({ config: ensureConfile(confile) });
+        break;
 
-    var script = 'gitfish.js';
-    var args = [process.argv[0], forever, action];
-    var config = require(confile);
-    var log = config.log || path.resolve(process.cwd(), 'gitfish.log');
-    switch(action) {
-        case 'run':
-            require('../')({ config: confile || 'config.json' });
-            break;
-        case 'start':
-        case 'restart':
-            args = startArgs(args);
-            args.push(script);
-            execForever(args);
-            break;
-        case 'stop':
-        case 'logs':
-            args.push(script);
-            execForever(args);
-            break;
-        case 'list':
-            execForever(args);
-            break;
-        default:
-            usage();
-    }
+    // gitfish stop|logs
+    case 'stop':
+    case 'logs':
+        settings = setup();
+        settings.args.push(script);
+        execForever(settings.args);
+        break;
 
+    // gitfish status|logs
+    case 'status':
+    case 'list':
+        settings = setup();
+        execForever(settings.args);
+        break;
+
+    // gitfish start|restart
+    case 'start':
+    case 'restart':
+        ensureConfile(confile);
+
+        settings = setup();
+        settings.args = settings.args.concat([
+            "--minUptime", "2000",
+            "--spinSleepTime", "2000",
+            "--plain", "--append",
+            "--sourceDir", path.resolve(__dirname),
+            "--pidFile", '/tmp/gitfish.pid',
+            "--outFile", settings.log,
+            "--errFile", settings.log,
+            "--logFile", settings.log,
+            script
+        ]);
+
+        execForever(settings.args);
+        break;
+
+    default:
+        usage();
 }
 
-function startArgs(args) {
-    return args.concat([
-        "--minUptime", "2000",
-        "--spinSleepTime", "2000",
-        "--plain", "--append",
-        "--sourceDir", path.resolve(__dirname),
-        "--pidFile", '/tmp/gitfish.pid',
-        "--outFile", log,
-        "--errFile", log,
-        "--logFile", log
-    ]);
-}
+// TODO: Make more modular. Started as script the grew and grew.
 
 function execForever(args) {
-    //console.dir(args);
-    //console.log(args.join(' '));
     var childProcess = require('child_process');
     childProcess.exec(args.join(' '), function (err, stdout, stderr) {
         if (err) {
@@ -106,6 +96,41 @@ function usage(err) {
     console.log(' - list    :: gitfish daemon information');
     console.log(' ');
     process.exit(1);
+}
+
+function setup(checkConfile) {
+    return {
+        args:   [process.argv[0], ensureForever(), action],
+        config: (checkConfile === true ? require(confile) : {}),
+        logs:   (config.log || path.resolve(process.cwd(), 'gitfish.log'))
+    };
+}
+
+function ensureConfile(cf) {
+    // Default config file, if not specified.
+    if (typeof cf === 'undefined') {
+        cf = path.resolve(process.cwd(), 'config.json');
+    }
+
+    // Config file must exist.
+    if (!fs.existsSync(cf)) {
+        usage(new Error('Config file ('+cf+') wasn\'t found.'));
+    }
+
+    return cf;
+}
+
+function ensureForever() {
+    var forever;
+    try {
+        forever = which('forever');
+    } catch (e) {
+        forever = path.resolve(__dirname, '..', 'node_modules', '.bin', 'forever');
+    }
+    if (!fs.existsSync(forever)) {
+        usage(new Error('Forever not found.'));
+    }
+    return forever;
 }
 
 function buildConfiguration() {

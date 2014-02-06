@@ -8,11 +8,11 @@ var qs      = require('querystring');
 var request = require('request');
 var config  = require(path.resolve(__dirname, 'test.json'));
 
-var post_data = {
+var post_data = qs.stringify({
     "payload": {
         "ref": "ref/heads/master"
     }
-};
+});
 
 var loggerBeQuiet = {
     info: function () {},
@@ -26,7 +26,17 @@ require('../')({
 });
 
 function testRequest(t, code, endpoint, token, method, data, callback) {
-    request({ url: 'http://localhost:'+config.port+endpoint+'?token='+token, method: method, json: data }, function (error, response, _) {
+    var options = {
+        url: 'http://localhost:'+config.port+endpoint+'?token='+token,
+        method: method,
+        body: data
+    };
+
+    //if (data && (method === 'POST' || method === 'PUT')) {
+        //options.body = data;
+    //}
+
+    request(options, function (error, response, _) {
         t.notOk(error, 'should not return error');
         t.ok(response, 'should have response');
         t.equal(code, response.statusCode, 'should have '+ code +' response');
@@ -62,7 +72,7 @@ test('git fish', function (g) {
 
     g.test('bad data', function (t) {
         t.plan(3);
-        testRequest(t, 500, '/test1', config.token, 'POST', {});
+        testRequest(t, 500, '/test1', config.token, 'POST', '');
     });
 
     g.test('bad path', function (t) {
