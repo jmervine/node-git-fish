@@ -5,7 +5,7 @@ var http    = require('http');
 var path    = require('path');
 var fs      = require('fs');
 var qs      = require('querystring');
-var request = require('request');
+var request = require('request-lite');
 var config  = require(path.resolve(__dirname, 'test.json'));
 
 var post_data = qs.stringify({
