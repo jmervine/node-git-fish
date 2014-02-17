@@ -7,16 +7,35 @@
 ```
 $ gitfish help
 
-USAGE: gitfish ACTION [CONFIG_FILE]
+Usage: gitfish [forever options] action
 
- Default CONFIG_FILE is <cwd>/config.json
+ Gitfish Actions
 
- Actions:
- - run     :: start gitfish in current session
- - start   :: starts gitfish daemonized w/ forever
- - restart :: restarts gitfish daemon
- - stop    :: stops gitfish daemon
- - list    :: gitfish daemon information
+   start
+   stop
+   restart
+   status
+   help
+
+ Optional Gitfish Options
+
+   --daemonize : start gitfish daemonized
+   --config    : default is `$CWD/config.json`
+   --port      : overide port from config
+   --token     : overide token from config
+
+ Supported Forever Options
+
+   --logFile [file] : forever log file location # default: /tmp/gitfish.log
+   --outFile [file] : stdout file location      # default: forever log file
+   --errFile [file] : stderr file location      # default: forever log file
+   --pidFile [file] : pid file location         # default: /tmp/gitfish.pid
+   --max     [n]    : max restarts on error
+   --plain          : disable command line colors
+   --verbose        : verbose forever output
+
+ What is forever? https://github.com/nodejitsu/forever
+
 ```
 
 #### Usage Examples
@@ -24,35 +43,24 @@ USAGE: gitfish ACTION [CONFIG_FILE]
 ```
 $ npm install -g github git://github.com/jmervine/node-git-fish.git
 
-$ gitfish config
-Listener port? [8000]
-Security token? [secret]
-Hook endpoint? [script] /foo
-Hook script? [CWD/script.js]
-Hook branch filter?
-Saved configuration to /home/jmervine/config.json
-
-$ cat config.json
-{
-  "port": 8000,
-  "token": "secret",
-  "foo": {
-    "script": "/home/jmervine/Development/node-git-fish/script.js"
-  }
-}
-
-$ gitfish start
-info:    Forever processing file: gitfish.js
-
-$ gitfish list
-info:    Forever processes running
-data:        uid  command       script     forever pid  logfile                                              uptime
-data:    [0] uoCt /usr/bin/node gitfish.js 7231    7237 /home/jmervine/Development/node-git-fish/gitfish.log 0:0:0:3.811
-
-$ gitfish stop
-info:    Forever stopped process:
-data:        uid  command       script     forever pid  logfile                                              uptime
-[0] lb7w /usr/bin/node gitfish.js 7079    7085 /home/jmervine/Development/node-git-fish/gitfish.log 0:0:2:12.540
+# TODO:
+#
+# $ gitfish config
+# Listener port? [8000]
+# Security token? [secret]
+# Hook endpoint? [script] /foo
+# Hook script? [CWD/script.js]
+# Hook branch filter?
+# Saved configuration to /home/jmervine/config.json
+#
+# $ cat config.json
+# {
+#   "port": 8000,
+#   "token": "secret",
+#   "foo": {
+#     "script": "/home/jmervine/Development/node-git-fish/script.js"
+#   }
+# }
 ```
 
 > Configuration note:
