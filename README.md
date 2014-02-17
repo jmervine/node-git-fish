@@ -43,24 +43,22 @@ Usage: gitfish [forever options] action
 ```
 $ npm install -g github git://github.com/jmervine/node-git-fish.git
 
-# TODO:
-#
-# $ gitfish config
-# Listener port? [8000]
-# Security token? [secret]
-# Hook endpoint? [script] /foo
-# Hook script? [CWD/script.js]
-# Hook branch filter?
-# Saved configuration to /home/jmervine/config.json
-#
-# $ cat config.json
-# {
-#   "port": 8000,
-#   "token": "secret",
-#   "foo": {
-#     "script": "/home/jmervine/Development/node-git-fish/script.js"
-#   }
-# }
+$ gitfish config
+Listener port? [8000]
+Security token? [secret]
+Hook endpoint? [script] /foo
+Hook script? [CWD/script.js]
+Hook branch filter?
+Saved configuration to /home/jmervine/config.json
+
+$ cat config.json
+{
+  "port": 8000,
+  "token": "secret",
+  "foo": {
+    "script": "/home/jmervine/script.js"
+  }
+}
 ```
 
 > Configuration note:

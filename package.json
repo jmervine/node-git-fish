@@ -26,7 +26,8 @@
   "dependencies": {
     "which": "~1.0.5",
     "subarg": "0.0.1",
-    "forever": "~0.10.11"
+    "forever": "~0.10.11",
+    "async": "~0.2.10"
   },
   "devDependencies": {
     "request-lite": "~2.33.1",

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
+var fs = require('fs');
 var path = require('path');
 var forever = require('forever');
 var subarg = require('subarg');
+var async = require('async');
 var argv = subarg(process.argv.slice(2));
 
 var action = argv._.join(''); // join action to fail on multiple or error
@@ -19,6 +21,7 @@ var options = {
 
 // read forever options from command line args or default
 if (argv.config) {
+    ensureConfig(argv.config);
     options.options.push('--config');
     options.options.push(argv.config);
 }
@@ -56,6 +59,9 @@ var script = 'index.js';
 //var gitfish = new (forever.Monitor)(script, options);
 
 switch (action) {
+    case 'config':
+        buildConfiguration();
+        break;
     case 'status':
         list(function (err, msg) {
             if (err) {
@@ -195,5 +201,96 @@ function usage(err) {
               + ' What is forever? https://github.com/nodejitsu/forever\n');
 
     process.exit(exitStatus);
+}
+
+
+// config handling
+function ensureConfile(cf) {
+    // Default config file, if not specified.
+    if (typeof cf === 'undefined') {
+        cf = path.resolve(process.cwd(), 'config.json');
+    }
+
+    // Config file must exist.
+    if (!fs.existsSync(cf)) {
+        usage(new Error('Config file ('+cf+') wasn\'t found.'));
+    }
+
+    return cf;
+}
+
+function buildConfiguration() {
+    var c = {};
+    var script;
+
+    function getHook(answer) {
+        script = answer.trim();
+        c[script] = undefined;
+    }
+
+    function getHookScript(answer) {
+        c[script].script = answer.trim();
+    }
+
+    function getHookBranch(answer) {
+        c[script].branch = answer.trim();
+    }
+
+    var readline = require('readline');
+    var async    = require('async');
+    var read = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    async.series([
+        function port(callback) {
+            read.question('Listener port? [8000] ', function (answer) {
+                c.port = parseInt((answer || '8000').trim(), 10);
+                callback();
+            });
+        },
+        function token(callback) {
+            read.question('Security token? [secret] ', function (answer) {
+                c.token = (answer || 'secret').trim();
+                callback();
+            });
+        },
+        function hook(callback) {
+            read.question('Hook endpoint? [script] ', function (answer) {
+                script = (answer || 'script').trim();
+                if (script.indexOf('/') === 0) {
+                    script = script.substring(1);
+                }
+                c[script] = {};
+                callback();
+            });
+        },
+        function hookscript(callback) {
+            read.question('Hook script? [PWD/script.js] ', function (answer) {
+                c[script].script = (answer || path.resolve(process.cwd(), 'script.js')).trim();
+                callback();
+            });
+        },
+        function hookbranch(callback) {
+            read.question('Hook branch filter? ', function (answer) {
+                if (answer) {
+                    c[script].branch = answer.trim();
+                }
+                callback();
+            });
+        }
+    ], function () {
+        read.close();
+        var out = path.resolve(process.cwd(), 'config.json');
+        fs.writeFile(out, JSON.stringify(c, null, 2), { encoding: 'utf8' }, function (err) {
+            if (err) {
+                console.trace(err);
+                process.exit(1);
+            }
+            console.log('Savd configuration to %s', out);
+            process.exit(0);
+        });
+    });
 }
 
