@@ -209,7 +209,7 @@ function usage(err) {
 
 
 // config handling
-function ensureConfile(cf) {
+function ensureConfig(cf) {
     // Default config file, if not specified.
     if (typeof cf === 'undefined') {
         cf = path.resolve(process.cwd(), 'config.json');
