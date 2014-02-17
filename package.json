@@ -1,7 +1,7 @@
 {
   "name": "git-fish",
   "version": "0.0.1",
-  "description": "Wrapper for phantomjs yslow.js",
+  "description": "Github Web Hook Listener",
   "main": "./index.js",
   "bin": {
     "gitfish": "./bin/gitfish"
@@ -16,9 +16,11 @@
   "keywords": [
     "git",
     "github",
+    "web hook",
     "post recieve hook",
     "hook",
     "autodeploy",
+    "auto-deploy",
     "deployment"
   ],
   "author": "Joshua Mervine <joshua@mervine.net> (http://mervine.net)",

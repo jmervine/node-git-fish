@@ -1,4 +1,4 @@
-# Git Post Commit Hook Listener in Node.js
+# Github Web Hook Listener in Node.js
 
 > Why fish? What recieves a hook?
 
@@ -6,16 +6,19 @@
 
 ```
 $ gitfish help
-
 Usage: gitfish [forever options] action
 
  Gitfish Actions
 
-   start
-   stop
-   restart
-   status
-   help
+   config   build initial config file
+   start    start gitfish
+   help     show this message
+
+ Daemonized Actions
+
+   stop     stop gitfish (when daemonized)
+   restart  restart gitfish (when daemonized)
+   status   status of gitfish (when de
 
  Optional Gitfish Options
 
@@ -41,7 +44,7 @@ Usage: gitfish [forever options] action
 #### Usage Examples
 
 ```
-$ npm install -g github git://github.com/jmervine/node-git-fish.git
+$ npm install git-fish
 
 $ gitfish config
 Listener port? [8000]
