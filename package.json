@@ -24,10 +24,9 @@
   "author": "Joshua Mervine <joshua@mervine.net> (http://mervine.net)",
   "license": "MIT",
   "dependencies": {
-    "forever": "~0.10.11",
     "which": "~1.0.5",
-    "winston": "~0.7.2",
-    "async": "~0.2.10"
+    "subarg": "0.0.1",
+    "forever": "~0.10.11"
   },
   "devDependencies": {
     "request-lite": "~2.33.1",

@@ -4,15 +4,17 @@ var test    = require('tape');
 var http    = require('http');
 var path    = require('path');
 var fs      = require('fs');
-var qs      = require('querystring');
+var format  = require('util').format;
 var request = require('request-lite');
 var config  = require(path.resolve(__dirname, 'test.json'));
 
-var post_data = qs.stringify({
+// supress output
+
+var post_data = {
     "payload": {
         "ref": "ref/heads/master"
     }
-});
+};
 
 var loggerBeQuiet = {
     info: function () {},
@@ -20,31 +22,45 @@ var loggerBeQuiet = {
     error: function () {}
 };
 
-require('../')({
-    config: path.resolve(__dirname, 'test.json'),
-    logger: loggerBeQuiet
-});
+// silence errors from gitfish
+console.error = function () {};
+console.trace = function () {};
+
+process.env.TEST_CONFIG = path.resolve(__dirname, 'test.json');
+process.env.TEST_PORT = 10888;
+var server = require('../');
 
 function testRequest(t, code, endpoint, token, method, data, callback) {
-    var options = {
-        url: 'http://localhost:'+config.port+endpoint+'?token='+token,
-        method: method,
-        body: data
-    };
+    var url = format('http://localhost:%s%s?token=%s',
+                        process.env.TEST_PORT,
+                        endpoint,
+                        token);
 
-    //if (data && (method === 'POST' || method === 'PUT')) {
-        //options.body = data;
-    //}
+    function requestCallback(error, response, _) {
+        t.error(error, 'should not return error',
+            format('%s %s should have %s response',
+                      method, endpoint, code));
+        t.ok(response, 'should have response',
+            format('%s %s should have %s response',
+                      method, endpoint, code));
 
-    request(options, function (error, response, _) {
-        t.notOk(error, 'should not return error');
-        t.ok(response, 'should have response');
-        t.equal(code, response.statusCode, 'should have '+ code +' response');
+        t.equal(response.statusCode, code,
+            format('%s %s should have %s response',
+                      method, endpoint, code));
+
         if (typeof callback === 'function') {
             callback();
         }
-    });
+    }
+
+    if (method === 'POST') {
+        request.post(url, requestCallback).json(data);
+    } else {
+        request[method.toLowerCase()](url, requestCallback);
+    }
 }
+
+//var test = tape.createHarness();
 
 test('git fish', function (g) {
 
@@ -72,7 +88,7 @@ test('git fish', function (g) {
 
     g.test('bad data', function (t) {
         t.plan(3);
-        testRequest(t, 500, '/test1', config.token, 'POST', '');
+        testRequest(t, 500, '/test1', config.token, 'POST', {});
     });
 
     g.test('bad path', function (t) {
@@ -83,7 +99,7 @@ test('git fish', function (g) {
     // Give tests 2 seconds to complete and then exit,
     // otherwise, the server process will hang.
     setTimeout( function () {
-        process.exit();
+        server.close();
     }, 2000);
 });
 

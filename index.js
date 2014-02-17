@@ -1,103 +1,108 @@
 #!/usr/bin/env node
 var http   = require('http');
 var path   = require('path');
-var logger = require('./lib/logger');
 var spawn  = require('child_process').spawn;
 var qs     = require('querystring');
+var subarg = require('subarg');
+var argv = subarg(process.argv.slice(2));
 
-module.exports = function(c) {
+/***
+ * Anything in example.json can be passed via
+ * commandline args, e.g.:
+ *
+ * $ index.js --port 3000 --config foo.json --token go-fish \
+ *      --gofish [ --script "./test/script.js", --branch "master" ]
+ *
+ *  See `subarg` (https://github.com/substack/subarg) for details on how
+ *  this works.
+ ***/
 
-    if (c.logger) {
-        logger = c.logger;
+var config;
+try {
+    config = require(path.resolve(process.env.TEST_CONFIG||argv.config||'config.json'));
+} catch (e) {
+    console.error('RTFM yo! You need a config file!');
+    console.trace(e);
+    process.exit(1);
+}
+
+config.port = process.env.TEST_PORT || argv.port || config.port || 8000;
+
+var server = http.createServer(function (request, response) {
+
+    var parts = request.url.split('?');
+
+    request.pathname = parts[0];
+    request.query    = qs.parse(parts[1]);
+
+    if (request.method !== 'POST' ||
+            request.query.token !== config.token) {
+        console.error('Forbidden request: %s', request.url);
+        response.writeHead(403, {'Content-Type': 'text/plain'});
+        response.end('Forbidden 403\n');
+        return;
     }
 
-    var config;
-    try {
-        config = require(path.resolve(process.cwd(), c.config));
-    } catch (e) {
-        logger.error('RTFM yo! You need a config file!');
-        logger.error(e.stack);
-        process.exit(1);
+    var endpoint = request.pathname;
+    if (endpoint.indexOf('/') === 0) {
+        endpoint = endpoint.replace('/', '');
     }
 
-    config.port = c.port || config.port || 8000;
+    if (typeof config[endpoint] === 'undefined') {
+        console.trace(new Error('404: Missing action: ' + endpoint));
+        response.writeHead(404, {'Content-Type': 'text/plain'});
+        response.end('File Not Found 404\n');
+        return;
+    }
 
-    http.createServer(function (request, response) {
+    var body = '';
+    request.on('data', function (data) {
+        body += data;
+    });
 
-        var parts = request.url.split('?');
+    request.on('end', function () {
+        body = JSON.parse(body);
 
-        request.pathname = parts[0];
-        request.query    = qs.parse(parts[1]);
-
-        if (request.method !== 'POST' ||
-                request.query.token !== config.token) {
-            logger.warn('Forbidden request: %s', request.url);
-            response.writeHead(403, {'Content-Type': 'text/plain'});
-            response.end('Forbidden 403\n');
+        var ref;
+        try {
+            ref = body.payload.ref;
+        } catch (e) {
+            console.error('Invalid post:');
+            console.trace(e);
+            response.writeHead(500, {'Content-Type': 'text/plain'});
+            response.end('Application Error 500\n');
             return;
         }
 
-        var endpoint = request.pathname;
-        if (endpoint.indexOf('/') === 0) {
-            endpoint = endpoint.replace('/', '');
-        }
-
-        if (typeof config[endpoint] === 'undefined') {
-            logger.error(new Error('404: Missing action: ' + endpoint).stack);
-            response.writeHead(404, {'Content-Type': 'text/plain'});
-            response.end('File Not Found 404\n');
+        if (config[endpoint].branch &&
+                !ref.match(config[endpoint].branch)) {
+            console.warn('Skipping request:\n -> %s doesn\'t match %s',
+                            ref, config[endpoint].branch);
+            response.writeHead(200, {'Content-Type': 'text/plain'});
+            response.end();
             return;
         }
 
-        var body = '';
-        request.on('data', function (data) {
-            body += data;
-        });
-
-        request.on('end', function () {
-            body = qs.parse(body);
-
-            var ref;
-            try {
-                ref = body.payload.ref;
-            } catch (e) {
-                logger.error('Invalid post:');
-                logger.error(e.stack);
-                response.writeHead(500, {'Content-Type': 'text/plain'});
-                response.end('Application Error 500\n');
-                return;
-            }
-
-            if (config[endpoint].branch &&
-                    !ref.match(config[endpoint].branch)) {
-                logger.warn('Skipping request:\n -> %s doesn\'t match %s',
-                                ref, config[endpoint].branch);
-                response.writeHead(200, {'Content-Type': 'text/plain'});
-                response.end();
-                return;
-            }
-
-            if (config[endpoint].script) {
-                logger.info(' Running:\n -> %s', config[endpoint].script);
-                spawn(path.resolve(process.cwd(), config[endpoint].script), [], {
-                    detached: true,
-                    stdio: 'inherit'
-                });
-                response.writeHead(200, {'Content-Type': 'text/plain'});
-                response.end();
-                return;
-            }
-        });
-
-    }).listen(config.port);
-
-    logger.info('Server running on port ', config.port);
-
-    Object.keys(config).forEach(function (key) {
-        if (key !== "token" && key !== "port") {
-            logger.info(' -> /%s', key);
+        if (config[endpoint].script) {
+            console.log(' Running:\n -> %s', config[endpoint].script);
+            spawn(path.resolve(process.cwd(), config[endpoint].script), [], {
+                detached: true,
+                stdio: 'inherit'
+            });
+            response.writeHead(200, {'Content-Type': 'text/plain'});
+            response.end();
+            return;
         }
     });
 
-};
+}).listen(config.port);
 
+console.log('Server running on port ', config.port);
+
+Object.keys(config).forEach(function (key) {
+    if (key !== "token" && key !== "port") {
+        console.log(' -> /%s', key);
+    }
+});
+
+module.exports = server;

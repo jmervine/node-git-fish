@@ -1,215 +1,199 @@
 #!/usr/bin/env node
-var fs      = require('fs');
-var which   = require('which').sync;
-var path    = require('path');
+var path = require('path');
+var forever = require('forever');
+var subarg = require('subarg');
+var argv = subarg(process.argv.slice(2));
 
-var script  = 'gitfish.js';
-var action  = process.argv[2];
-var confile = process.argv[3];
+var action = argv._.join(''); // join action to fail on multiple or error
+var daemonize = (typeof argv.daemonize !== 'undefined');
 
-var settings;
+// forced forever options
+var options = {
+    silent: false,
+    killTree: true,
+    minUptime: 4000,
+    spinSleepTime: 2000,
+    sourceDir: path.resolve(__dirname, '..'),
+    options: []
+};
 
-switch(action) {
+// read forever options from command line args or default
+if (argv.config) {
+    options.options.push('--config');
+    options.options.push(argv.config);
+}
 
-    // gitfish config
-    case 'config':
-        buildConfiguration();
-        break;
+if (argv.port) {
+    options.options.push('--port');
+    options.options.push(argv.port);
+}
 
-    // gitfish run
-    case 'run':
-        require('../')({ config: ensureConfile(confile) });
-        break;
+if (argv.token) {
+    options.options.push('--token');
+    options.options.push(argv.token);
+}
 
-    // gitfish stop|logs
-    case 'stop':
-    case 'logs':
-        settings = setup();
-        settings.args.push(script);
-        execForever(settings.args);
-        break;
+options.logFile = argv.logFile || '/tmp/gitfish.log';
+options.pidFile = argv.pidFile || '/tmp/gitfish.pid';
 
-    // gitfish status|logs
+if (daemonize) {
+    // log to console when not daemonized
+    options.outFile = argv.outFile || options.logFile;
+    options.errFile = argv.errFile || options.logFile;
+}
+
+if (argv.plain) {
+    options.plain = argv.plain;
+}
+if (argv.verbose) {
+    options.verbose = argv.verbose;
+}
+if (argv.debug) {
+    options.debug = argv.debug;
+}
+
+var script = 'index.js';
+//var gitfish = new (forever.Monitor)(script, options);
+
+switch (action) {
     case 'status':
-    case 'list':
-        settings = setup();
-        execForever(settings.args);
-        break;
-
-    // gitfish start|restart
-    case 'start':
-    case 'restart':
-        ensureConfile(confile);
-
-        settings = setup();
-        settings.args = settings.args.concat([
-            "--minUptime", "2000",
-            "--spinSleepTime", "2000",
-            "--plain", "--append",
-            "--sourceDir", path.resolve(__dirname),
-            "--pidFile", '/tmp/gitfish.pid',
-            "--outFile", settings.log,
-            "--errFile", settings.log,
-            "--logFile", settings.log,
-            script
-        ]);
-
-        execForever(settings.args);
-        break;
-
-    default:
-        usage();
-}
-
-// TODO: Make more modular. Started as script the grew and grew.
-
-function execForever(args) {
-    var childProcess = require('child_process');
-    childProcess.exec(args.join(' '), function (err, stdout, stderr) {
-        if (err) {
-            usage(err);
-        } else if (stderr) {
-            usage(new Error(stderr));
-        } else {
-            console.log(stdout);
-            process.exit(0);
-        }
-    });
-}
-
-// Print usage.
-function usage(err) {
-    if (err) {
-        console.log(err.message);
-        //console.log(' ');
-    }
-    console.log('USAGE: gitfish ACTION [CONFIG_FILE]');
-    console.log(' ');
-    console.log(' Default CONFIG_FILE is <cwd>/config.json');
-    console.log(' ');
-    console.log(' Actions:');
-    console.log(' - config  :: build gitfish configuration file');
-    console.log(' - run     :: start gitfish in current session');
-    console.log(' - start   :: starts gitfish daemonized w/ forever');
-    console.log(' - restart :: restarts gitfish daemon');
-    console.log(' - stop    :: stops gitfish daemon');
-    console.log(' - list    :: gitfish daemon information');
-    console.log(' ');
-    process.exit(1);
-}
-
-function setup(checkConfile) {
-    return {
-        args:   [process.argv[0], ensureForever(), action],
-        config: (checkConfile === true ? require(confile) : {}),
-        logs:   (config.log || path.resolve(process.cwd(), 'gitfish.log'))
-    };
-}
-
-function ensureConfile(cf) {
-    // Default config file, if not specified.
-    if (typeof cf === 'undefined') {
-        cf = path.resolve(process.cwd(), 'config.json');
-    }
-
-    // Config file must exist.
-    if (!fs.existsSync(cf)) {
-        usage(new Error('Config file ('+cf+') wasn\'t found.'));
-    }
-
-    return cf;
-}
-
-function ensureForever() {
-    var forever;
-    try {
-        forever = which('forever');
-    } catch (e) {
-        forever = path.resolve(__dirname, '..', 'node_modules', '.bin', 'forever');
-    }
-    if (!fs.existsSync(forever)) {
-        usage(new Error('Forever not found.'));
-    }
-    return forever;
-}
-
-function buildConfiguration() {
-    var c = {};
-    var script;
-
-    function getHook(answer) {
-        script = answer.trim();
-        c[script] = undefined;
-    }
-
-    function getHookScript(answer) {
-        c[script].script = answer.trim();
-    }
-
-    function getHookBranch(answer) {
-        c[script].branch = answer.trim();
-    }
-
-    var readline = require('readline');
-    var async    = require('async');
-    var read = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    async.series([
-        function port(callback) {
-            read.question('Listener port? [8000] ', function (answer) {
-                c.port = parseInt((answer || '8000').trim(), 10);
-                callback();
-            });
-        },
-        function token(callback) {
-            read.question('Security token? [secret] ', function (answer) {
-                c.token = (answer || 'secret').trim();
-                callback();
-            });
-        },
-        function logs(callback) {
-            read.question('Log location? [/tmp/gitfish.log] ', function (answer) {
-                c.log = (answer || '/tmp/gitfish.log').trim();
-                callback();
-            });
-        },
-        function hook(callback) {
-            read.question('Hook endpoint? [script] ', function (answer) {
-                script = (answer || 'script').trim();
-                if (script.indexOf('/') === 0) {
-                    script = script.substring(1);
-                }
-                c[script] = {};
-                callback();
-            });
-        },
-        function hookscript(callback) {
-            read.question('Hook script? [PWD/script.js] ', function (answer) {
-                c[script].script = (answer || path.resolve(process.cwd(), 'script.js')).trim();
-                callback();
-            });
-        },
-        function hookbranch(callback) {
-            read.question('Hook branch filter? ', function (answer) {
-                if (answer) {
-                    c[script].branch = answer.trim();
-                }
-                callback();
-            });
-        }
-    ], function () {
-        read.close();
-        var out = path.resolve(process.cwd(), 'config.json');
-        fs.writeFile(out, JSON.stringify(c, null, 2), { encoding: 'utf8' }, function (err) {
+        list(function (err, msg) {
             if (err) {
-                console.trace(err);
-                process.exit(1);
+                usage(err);
             }
-            console.log('Savd configuration to %s', out);
-            process.exit(0);
+
+            if (msg) {
+                console.log('gitfish is currently running');
+                console.log(msg);
+            } else {
+                console.log('gitfish is not running');
+            }
         });
-    });
+        break;
+    case 'start':
+        list(function (err, msg) {
+            if (err) {
+                usage(err);
+            }
+
+            if (msg) {
+                console.log('gitfish is currently running');
+                console.log(msg);
+            } else {
+                if (daemonize) {
+                    console.log('Starting gitfish:');
+                    forever.startDaemon(script, options);
+
+                    // give it a sec...
+                    setTimeout(function () {
+                        list(function (err, msg) {
+                            if (msg) {
+                                console.log('> started as:');
+                                console.log(msg);
+                            } else {
+                                console.trace(new Error('running gitfish instance expected but not found'));
+                            }
+                        });
+                    }, 500);
+                } else {
+                    var child = forever.start(script, options);
+                    forever.startServer(child);
+                }
+            }
+        });
+        break;
+    case 'stop':
+        list(function (err, msg) {
+            if (err) {
+                usage(err);
+            }
+
+            if (!msg) {
+                console.log('gitfish is not running');
+            } else {
+                console.log('Stopping gitfish:');
+                console.log(msg);
+                forever.stop(script);
+
+                setTimeout(function () {
+                    list(function (err, msg) {
+                        if (!msg) {
+                            console.log('> stopped.');
+                        }
+                    });
+                }, 500);
+            }
+            });
+        break;
+    case 'restart':
+        list(function (err, msg) {
+            if (err) {
+                usage(err);
+            }
+
+            if (!msg) {
+                console.log('gitfish is not running');
+            } else {
+                console.log('Restarting gitfish');
+                forever.restart(script);
+                // give it a sec...
+                setTimeout(function () {
+                    list(function (err, msg) {
+                        if (msg) {
+                            console.log('> restarted as:');
+                            console.log(msg);
+                        } else {
+                            console.trace(new Error('running gitfish instance expected but not found'));
+                        }
+                    });
+                }, 500);
+            }
+        });
+        break;
+    default: usage();
 }
+
+function list(callback) {
+    forever.list(script, callback);
+}
+
+function usage(err) {
+    var exitStatus = 0;
+    if (err) {
+        console.error('An error occured.');
+        console.trace(err);
+        exitStatus = 1;
+    }
+
+    console.log('Usage: gitfish [forever options] action\n'
+              + '\n'
+              + ' Gitfish Actions\n'
+              + '\n'
+              + '   start\n'
+              + '   stop\n'
+              + '   restart\n'
+              + '   status\n'
+              + '   help\n'
+              + '\n'
+              + ' Optional Gitfish Options\n'
+              + '\n'
+              + '   --daemonize : start gitfish daemonized\n'
+              + '   --config    : default is `$CWD/config.json`\n'
+              + '   --port      : overide port from config\n'
+              + '   --token     : overide token from config\n'
+              + '\n'
+              + ' Supported Forever Options\n'
+              + '\n'
+              + '   --logFile [file] : forever log file location # default: /tmp/gitfish.log\n'
+              + '   --outFile [file] : stdout file location      # default: forever log file\n'
+              + '   --errFile [file] : stderr file location      # default: forever log file\n'
+              + '   --pidFile [file] : pid file location         # default: /tmp/gitfish.pid\n'
+              + '   --max     [n]    : max restarts on error\n'
+              + '   --plain          : disable command line colors\n'
+              + '   --verbose        : verbose forever output\n'
+              + '\n'
+              + ' What is forever? https://github.com/nodejitsu/forever\n');
+
+    process.exit(exitStatus);
+}
+
