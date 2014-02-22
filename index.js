@@ -30,6 +30,9 @@ config.port = process.env.TEST_PORT || argv.port || config.port || 8000;
 
 var server = http.createServer(function (request, response) {
 
+    var json = (request.headers['content-type'] === 'application/json' ||
+                    request.headers['Content-Type'] === 'applciation/json');
+
     var parts = request.url.split('?');
 
     request.pathname = parts[0];
@@ -61,7 +64,18 @@ var server = http.createServer(function (request, response) {
     });
 
     request.on('end', function () {
-        body = JSON.parse(body);
+        if (json) {
+            body = JSON.parse(body);
+        } else {
+            body = qs.parse(body);
+            Object.keys(body).forEach(function (key) {
+                try {
+                    body[key] = JSON.parse(body[key]);
+                } catch (e) {
+                    // don't fail on content that doesn't parse
+                }
+            });
+        }
 
         var ref;
         try {

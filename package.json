@@ -1,6 +1,6 @@
 {
   "name": "git-fish",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Github Web Hook Listener",
   "main": "./index.js",
   "bin": {
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "request-lite": "~2.33.1",
-    "tape": "~2.4.2"
+    "tape": "~2.4.2",
+    "http-debug": "~0.1.1"
   }
 }

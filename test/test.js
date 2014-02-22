@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 var test    = require('tape');
-var http    = require('http');
+var http    = require('http-debug').http;
+
 var path    = require('path');
 var fs      = require('fs');
+var qs      = require('querystring');
 var format  = require('util').format;
 var request = require('request-lite');
 var config  = require(path.resolve(__dirname, 'test.json'));
@@ -14,7 +16,7 @@ var post_data = {
     "payload": {
         "ref": "ref/heads/master"
     }
-};
+}
 
 var loggerBeQuiet = {
     info: function () {},
@@ -30,44 +32,75 @@ process.env.TEST_CONFIG = path.resolve(__dirname, 'test.json');
 process.env.TEST_PORT = 10888;
 var server = require('../');
 
-function testRequest(t, code, endpoint, token, method, data, callback) {
+
+// TODO: This needs a serious look. It started out as a good idea
+// and then ballooned.
+function testRequest(t, opts, callback) {
+    if (typeof opts === 'function') {
+        callback = opts;
+        opts = {};
+    }
+
+    // default to valid passing options
+    opts.code = opts.code || 200;
+    opts.endpoint = opts.endpoint || '/test1';
+    opts.token = opts.token || config.token;
+    opts.method = opts.method || 'POST';
+    opts.data = opts.data || post_data;
+    opts.form = opts.form || false;
+
     var url = format('http://localhost:%s%s?token=%s',
                         process.env.TEST_PORT,
-                        endpoint,
-                        token);
+                        opts.endpoint,
+                        opts.token);
 
     function requestCallback(error, response, _) {
         t.error(error, 'should not return error',
             format('%s %s should have %s response',
-                      method, endpoint, code));
+                      opts.method, opts.endpoint, opts.code));
         t.ok(response, 'should have response',
             format('%s %s should have %s response',
-                      method, endpoint, code));
+                      opts.method, opts.endpoint, opts.code));
 
-        t.equal(response.statusCode, code,
+        t.equal(response.statusCode, opts.code,
             format('%s %s should have %s response',
-                      method, endpoint, code));
+                      opts.method, opts.endpoint, opts.code));
 
         if (typeof callback === 'function') {
             callback();
         }
     }
 
-    if (method === 'POST') {
-        request.post(url, requestCallback).json(data);
+    if (opts.method === 'POST') {
+        if (opts.form) {
+            opts.data.payload = JSON.stringify(opts.data.payload);
+            request.post(url, requestCallback).form(opts.data);
+        } else {
+            request.post(url, requestCallback).json(opts.data);
+        }
     } else {
-        request[method.toLowerCase()](url, requestCallback);
+        request[opts.method.toLowerCase()](url, requestCallback);
     }
 }
 
-//var test = tape.createHarness();
-
 test('git fish', function (g) {
 
-    g.test('test valid', function (t) {
+    g.test('test valid json', function (t) {
         t.plan(4);
         cleanup();
-        testRequest(t, 200, '/test1', config.token, 'POST', post_data, function() {
+        testRequest(t, function() {
+            setTimeout(function () {
+                // give it a second
+                t.ok(fs.existsSync('/tmp/.git.fish.test.out'), 'should run script');
+                cleanup();
+            }, 200);
+        });
+    });
+
+    g.test('test valid form', function (t) {
+        t.plan(4);
+        cleanup();
+        testRequest(t, { form: true }, function() {
             setTimeout(function () {
                 // give it a second
                 t.ok(fs.existsSync('/tmp/.git.fish.test.out'), 'should run script');
@@ -78,22 +111,22 @@ test('git fish', function (g) {
 
     g.test('bad token', function (t) {
         t.plan(3);
-        testRequest(t, 403, '/test1', 'bad', 'POST', post_data);
+        testRequest(t, { code: 403, token: 'bad' });
     });
 
     g.test('bad method', function (t) {
         t.plan(3);
-        testRequest(t, 403, '/test1', config.token, 'GET', post_data);
+        testRequest(t, { code: 403, method: 'GET' });
     });
 
     g.test('bad data', function (t) {
         t.plan(3);
-        testRequest(t, 500, '/test1', config.token, 'POST', {});
+        testRequest(t, { code: 500, data: {} });
     });
 
     g.test('bad path', function (t) {
         t.plan(3);
-        testRequest(t, 404, '/bad', config.token, 'POST', post_data);
+        testRequest(t, { code: 404, endpoint: '/bad' });
     });
 
     // Give tests 2 seconds to complete and then exit,
@@ -109,4 +142,3 @@ function cleanup() {
         fs.unlinkSync('/tmp/.git.fish.test.out');
     }
 }
-
