@@ -75,14 +75,13 @@ var server = http.createServer(function (request, response) {
                     // don't fail on content that doesn't parse
                 }
             });
+            body = body.payload;
         }
 
-        var ref;
-        try {
-            ref = body.payload.ref;
-        } catch (e) {
+        var ref = body.ref;
+        if (typeof ref === 'undefined') {
             console.error('Invalid post:');
-            console.trace(e);
+            console.trace(new Error(body));
             response.writeHead(500, {'Content-Type': 'text/plain'});
             response.end('Application Error 500\n');
             return;

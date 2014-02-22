@@ -13,9 +13,7 @@ var config  = require(path.resolve(__dirname, 'test.json'));
 // supress output
 
 var post_data = {
-    "payload": {
-        "ref": "ref/heads/master"
-    }
+    "ref": "ref/heads/master"
 }
 
 var loggerBeQuiet = {
@@ -55,26 +53,24 @@ function testRequest(t, opts, callback) {
                         opts.token);
 
     function requestCallback(error, response, _) {
-        t.error(error, 'should not return error',
-            format('%s %s should have %s response',
-                      opts.method, opts.endpoint, opts.code));
-        t.ok(response, 'should have response',
-            format('%s %s should have %s response',
-                      opts.method, opts.endpoint, opts.code));
+        t.error(error, format('%s %s with %s should not error',
+                      opts.method, opts.endpoint, (opts.form ? 'form' : 'json')));
+
+        t.ok(response, format('%s %s with %s should have response',
+                      opts.method, opts.endpoint, (opts.form ? 'form' : 'json')));
 
         t.equal(response.statusCode, opts.code,
-            format('%s %s should have %s response',
-                      opts.method, opts.endpoint, opts.code));
+            format('%s %s with %s should have %s response',
+                      opts.method, opts.endpoint, (opts.form ? 'form' : 'json'), opts.code));
 
         if (typeof callback === 'function') {
             callback();
         }
-    }
+   }
 
     if (opts.method === 'POST') {
         if (opts.form) {
-            opts.data.payload = JSON.stringify(opts.data.payload);
-            request.post(url, requestCallback).form(opts.data);
+            request.post(url, requestCallback).form({ payload : JSON.stringify(opts.data) });
         } else {
             request.post(url, requestCallback).json(opts.data);
         }
