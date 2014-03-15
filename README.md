@@ -1,4 +1,6 @@
-# Github Web Hook Listener in Node.js
+# git-fish
+
+### Github Web Hook Listener in Node.js
 
 > Why fish? What recieves a hook?
 
