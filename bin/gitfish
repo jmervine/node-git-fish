@@ -55,7 +55,7 @@ if (argv.debug) {
     options.debug = argv.debug;
 }
 
-var script = 'index.js';
+var script = 'gitfish.js';
 //var gitfish = new (forever.Monitor)(script, options);
 
 switch (action) {

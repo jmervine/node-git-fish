@@ -26,7 +26,7 @@ console.trace = function () {};
 
 process.env.TEST_CONFIG = path.resolve(__dirname, 'test.json');
 process.env.TEST_PORT = 10888;
-var server = require('../');
+var server = require('../gitfish');
 
 tape('git fish', function (group) {
 
