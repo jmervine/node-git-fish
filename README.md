@@ -80,10 +80,12 @@
       "prod": {
         "script": "/home/me/update_prod.sh",
         "branch": "master" // optional branch matcher
+            // "branch" can also be an array of branches:
+            // e.g. `[ "master", "develop" ]`
       },
       "dev": {
         "script": "/home/me/update_dev.sh",
-        "branch": "develop" // optional branch matcher
+        "branch": [ "release", "develop" ] // optional branch matcher
       }
     }
 
@@ -91,14 +93,14 @@ Where `/home/me/update_prod.sh` is something like:
 
     #!/usr/bin/env bash
     cd /path/to/mysite
-    
+
     # For safty, you can stash any changes, although best practice says
     # there shouldn't be any here.
     # git stash
-    
+
     git checkout master
     git pull
-    
+
     make restart
 
 

@@ -6,6 +6,6 @@
     },
     "gofish" : {
         "script": "./test/script.js",
-        "branch"  : "master"
+        "branch"  : ["master"]
     }
 }

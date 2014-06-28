@@ -87,13 +87,20 @@ var server = http.createServer(function (request, response) {
             return;
         }
 
-        if (config[endpoint].branch &&
-                !ref.match(config[endpoint].branch)) {
-            console.warn('Skipping request:\n -> %s doesn\'t match %s',
-                            ref, config[endpoint].branch);
-            response.writeHead(200, {'Content-Type': 'text/plain'});
-            response.end();
-            return;
+        var branch = config[endpoint].branch;
+        if (branch) {
+            var skip = function() {
+                console.warn('Skipping request:\n -> %s doesn\'t match %s', ref, branch);
+                response.writeHead(200, {'Content-Type': 'text/plain'});
+                response.end();
+            };
+
+            if (Array.isArray(branch)) {
+                if (!branch.some(function(i) { return ref.match(i) })) return skip();
+            } else {
+                if (!ref.match(branch)) return skip();
+            }
+
         }
 
         if (config[endpoint].script) {

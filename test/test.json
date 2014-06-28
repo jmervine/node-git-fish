@@ -7,6 +7,10 @@
     "test2" : {
         "script": "test/script.js",
         "branch"  : "master"
+    },
+    "test3" : {
+        "script": "test/script.js",
+        "branch"  : ["master", "develop"]
     }
 }
 

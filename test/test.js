@@ -7,6 +7,7 @@ var fs      = require('fs');
 var qs      = require('querystring');
 var format  = require('util').format;
 var request = require('request-lite');
+var async   = require('async');
 
 // supress output
 
@@ -31,16 +32,49 @@ var server = require('../');
 tape('git fish', function (group) {
 
     group.test('test valid json', function (test) {
-        request.post('http://localhost:10888/test1?token=go-fish', { json: post_data }, function(err, res, body) {
-            test.error(err, 'should not error')
-            test.ok(res, 'should return response');
-            test.equal(res.statusCode, 200, 'should return 200');
-            setTimeout(function () {
-                // give it a second
-                test.ok(fs.existsSync('/tmp/.git.fish.test.out'), 'should run script');
-                cleanup();
-                test.end();
-            }, 200);
+        async.series([
+            function(callback) {
+                request.post('http://localhost:10888/test1?token=go-fish', { json: post_data }, function(err, res, body) {
+                    test.error(err, 'should not error')
+                    test.ok(res, 'should return response');
+                    test.equal(res.statusCode, 200, 'should return 200');
+                    setTimeout(function () {
+                        // give it a bit
+                        test.ok(fs.existsSync('/tmp/.git.fish.test.out'), 'should run script');
+                        cleanup();
+                        callback();
+                    }, 200);
+                });
+            },
+            function(callback) {
+                request.post('http://localhost:10888/test2?token=go-fish', { json: post_data }, function(err, res, body) {
+                    test.error(err, 'should not error')
+                    test.ok(res, 'should return response');
+                    test.equal(res.statusCode, 200, 'should return 200');
+                    setTimeout(function () {
+                        // give it a bit
+                        test.ok(fs.existsSync('/tmp/.git.fish.test.out'), 'should run script');
+                        cleanup();
+                        callback();
+                    }, 200);
+                });
+            },
+            function(callback) {
+                request.post('http://localhost:10888/test3?token=go-fish', { json: post_data }, function(err, res, body) {
+                    test.error(err, 'should not error')
+                    test.ok(res, 'should return response');
+                    test.equal(res.statusCode, 200, 'should return 200');
+                    setTimeout(function () {
+                        // give it a bit
+                        test.ok(fs.existsSync('/tmp/.git.fish.test.out'), 'should run script');
+                        cleanup();
+                        callback();
+                    }, 200);
+                });
+            },
+        ],
+        function() {
+            test.end();
         });
     });
 
