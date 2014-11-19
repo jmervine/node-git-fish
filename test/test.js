@@ -15,6 +15,10 @@ var post_data = {
     "ref": "ref/heads/master"
 }
 
+var ping_data = {
+    "zen": "Clever."
+}
+
 var loggerBeQuiet = {
     info: function () {},
     warn: function () {},
@@ -70,6 +74,14 @@ tape('git fish', function (group) {
                         cleanup();
                         callback();
                     }, 200);
+                });
+            },
+            function(callback) {
+                request.post('http://localhost:10888/test1?token=go-fish', { json: ping_data }, function(err, res, body) {
+                    test.error(err, 'should not error')
+                    test.ok(res, 'should return response');
+                    test.equal(res.statusCode, 200, 'should return 200');
+                    callback();
                 });
             },
         ],

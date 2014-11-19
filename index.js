@@ -78,6 +78,15 @@ var server = http.createServer(function (request, response) {
             body = body.payload;
         }
 
+        if (body.zen) {
+            // Handle github ping by bouncing the zen.
+            console.log('Got ping from ' +
+                (body.hook && body.hook.url) + ': ' + body.zen);
+            response.writeHead(200, {'Content-Type': 'text/plain'});
+            response.end(body.zen);
+            return;
+        }
+
         var ref = body.ref;
         if (typeof ref === 'undefined') {
             console.error('Invalid post:');
