@@ -109,3 +109,7 @@ And your post commit hooks would be:
     http://mysite:8001/prod?token=shhh_do_not_tell_anyone
     http://mysite:8001/dev?token=shhh_do_not_tell_anyone
 
+## Contributors
+
+* [davidbau](https://github.com/davidbau)
+
