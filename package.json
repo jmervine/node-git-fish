@@ -27,13 +27,13 @@
   "license": "MIT",
   "dependencies": {
     "which": "~1.0.5",
-    "subarg": "0.0.1",
-    "forever": "~0.10.11",
-    "async": "~0.2.10"
+    "subarg": "~1.0.0",
+    "forever": "~0.13.0",
+    "async": "~0.9.0"
   },
   "devDependencies": {
-    "request-lite": "~2.33.1",
-    "tape": "~2.4.2",
+    "request-lite": "~2.40.0",
+    "tape": "~3.0.3",
     "http-debug": "~0.1.1"
   }
 }
