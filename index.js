@@ -87,7 +87,9 @@ var server = http.createServer(function (request, response) {
             return;
         }
 
-        var ref = body.ref;
+        // Github hooks report the branch name in body.ref.
+        // Travis hooks report the banch name in body.branch.
+        var ref = body.ref || body.branch;
         if (typeof ref === 'undefined') {
             console.error('Invalid post:');
             console.trace(new Error(body));
