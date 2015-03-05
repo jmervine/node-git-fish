@@ -1,5 +1,7 @@
 # git-fish
 
+[![Join the chat at https://gitter.im/jmervine/node-git-fish](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jmervine/node-git-fish?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/jmervine/node-git-fish.png?branch=master)](https://travis-ci.org/jmervine/node-git-fish) &nbsp; [![Dependancy Status](https://david-dm.org/jmervine/node-git-fish.png)](https://david-dm.org/jmervine/node-git-fish) &nbsp; [![NPM Version](https://badge.fury.io/js/git-fish.png)](https://badge.fury.io/js/git-fish)
 
 ### Github Web Hook Listener in Node.js
