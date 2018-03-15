@@ -31,7 +31,7 @@ config.port = process.env.TEST_PORT || argv.port || config.port || 8000;
 var server = http.createServer(function (request, response) {
 
     var json = (request.headers['content-type'] === 'application/json' ||
-                    request.headers['Content-Type'] === 'applciation/json');
+                    request.headers['Content-Type'] === 'application/json');
 
     var parts = request.url.split('?');
 
