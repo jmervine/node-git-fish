@@ -29,8 +29,8 @@
 
        --daemonize : start gitfish daemonized
        --config    : default is `$CWD/config.json`
-       --port      : overide port from config
-       --token     : overide token from config
+       --port      : override port from config
+       --token     : override token from config
 
      Supported Forever Options
 
