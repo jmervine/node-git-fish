@@ -6,7 +6,7 @@
 
 ### Github Web Hook Listener in Node.js
 
-> Why fish? What recieves a hook?
+> Why fish? What receives a hook?
 
 ### Usage
 
