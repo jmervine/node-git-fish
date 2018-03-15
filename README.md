@@ -6,7 +6,7 @@
 
 ### Github Web Hook Listener in Node.js
 
-> Why fish? What recieves a hook?
+> Why fish? What receives a hook?
 
 ### Usage
 
@@ -29,8 +29,8 @@
 
        --daemonize : start gitfish daemonized
        --config    : default is `$CWD/config.json`
-       --port      : overide port from config
-       --token     : overide token from config
+       --port      : override port from config
+       --token     : override token from config
 
      Supported Forever Options
 
@@ -96,7 +96,7 @@ Where `/home/me/update_prod.sh` is something like:
     #!/usr/bin/env bash
     cd /path/to/mysite
 
-    # For safty, you can stash any changes, although best practice says
+    # For safety, you can stash any changes, although best practice says
     # there shouldn't be any here.
     # git stash
 
