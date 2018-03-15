@@ -96,7 +96,7 @@ Where `/home/me/update_prod.sh` is something like:
     #!/usr/bin/env bash
     cd /path/to/mysite
 
-    # For safty, you can stash any changes, although best practice says
+    # For safety, you can stash any changes, although best practice says
     # there shouldn't be any here.
     # git stash
 
