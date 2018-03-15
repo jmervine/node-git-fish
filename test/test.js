@@ -9,7 +9,7 @@ var format  = require('util').format;
 var request = require('request-lite');
 var async   = require('async');
 
-// supress output
+// suppress output
 
 var post_data = {
     "ref": "ref/heads/master"
