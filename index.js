@@ -5,6 +5,7 @@ var spawn  = require('child_process').spawn;
 var qs     = require('querystring');
 var subarg = require('subarg');
 var argv = subarg(process.argv.slice(2));
+var crypto = require('crypto');
 
 /***
  * Anything in example.json can be passed via
@@ -38,8 +39,7 @@ var server = http.createServer(function (request, response) {
     request.pathname = parts[0];
     request.query    = qs.parse(parts[1]);
 
-    if (request.method !== 'POST' ||
-            request.query.token !== config.token) {
+    if (request.method !== 'POST') {
         console.error('Forbidden request: %s', request.url);
         response.writeHead(403, {'Content-Type': 'text/plain'});
         response.end('Forbidden 403\n');
@@ -64,6 +64,17 @@ var server = http.createServer(function (request, response) {
     });
 
     request.on('end', function () {
+        var ourHash = crypto.createHmac("sha1", config.token).update(body.toString()).digest("hex");
+        var split = request.headers['x-hub-signature'].split('=');
+        var theirHash = (split.length == 2) ? split[1] : '';
+        if (ourHash !== theirHash) {
+            console.error('Forbidden request: %s', request.url);
+            console.log(ourHash);
+            console.log(theirHash);
+            response.writeHead(403, {'Content-Type': 'text/plain'});
+            response.end('Forbidden 403\n');
+            return;
+        }
         if (json) {
             body = JSON.parse(body);
         } else {
